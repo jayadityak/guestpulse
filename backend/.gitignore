@@ -1,0 +1,35 @@
+# Environment — secrets
+.env
+.env.*
+*.env
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+env/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+
+# URL / scrape caches (regenerated automatically)
+hotel_urls_cache.json
+
+# Old scrapers (replaced by google_places_scraper.py)
+playwright_scraper.py
+scraper.py
+seed_data.py

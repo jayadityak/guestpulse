@@ -26,7 +26,7 @@ from sqlalchemy.orm import Session
 from database import init_db, get_db, SessionLocal
 from models import HotelORM, ReviewORM, CitySearchRequest, HotelOut, ReviewOut, JobProgress, RecommendRequest, HotelRecommendation
 from google_places_scraper import discover_and_collect
-from yelp_scraper import enrich_hotels_with_yelp
+from apify_reviews_scraper import enrich_hotels_with_apify
 from analyzer import analyze_reviews, score_hotel  # both used in pipeline
 from recommender import recommend as nlp_recommend, stream_recommendations
 
@@ -292,8 +292,9 @@ async def _run_pipeline(job_id: str, req: CitySearchRequest):
             j.update(status="error", error="No hotels found on Google Maps.")
             return
 
-        # Optional Yelp enrichment — adds 3 reviews/hotel if YELP_API_KEY is set
-        hotels_raw = await enrich_hotels_with_yelp(hotels_raw, city)
+        # Apify enrichment — adds up to 15 Google Maps reviews/hotel if APIFY_API_TOKEN is set
+        # (Google Places API caps at 5 reviews; Apify bypasses that limit for free)
+        hotels_raw = await enrich_hotels_with_apify(hotels_raw, city)
 
         j.update(hotels_total=len(hotels_raw), phase="Saving hotels to database…")
 

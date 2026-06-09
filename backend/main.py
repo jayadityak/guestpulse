@@ -26,6 +26,7 @@ from sqlalchemy.orm import Session
 from database import init_db, get_db, SessionLocal
 from models import HotelORM, ReviewORM, CitySearchRequest, HotelOut, ReviewOut, JobProgress, RecommendRequest, HotelRecommendation
 from google_places_scraper import discover_and_collect
+from yelp_scraper import enrich_hotels_with_yelp
 from analyzer import analyze_reviews, score_hotel  # both used in pipeline
 from recommender import recommend as nlp_recommend, stream_recommendations
 
@@ -77,6 +78,7 @@ def _load_fixture(db: Session) -> int:
             url=hd.get("url", ""),
             phone=hd.get("phone", ""),
             price_range=hd.get("price_range", ""),
+            photo_url=hd.get("photo_url", ""),
             avg_rating=hd.get("avg_rating"),
             total_reviews=hd.get("total_reviews", 0),
             overall_score=hd.get("overall_score"),
@@ -290,6 +292,9 @@ async def _run_pipeline(job_id: str, req: CitySearchRequest):
             j.update(status="error", error="No hotels found on Google Maps.")
             return
 
+        # Optional Yelp enrichment — adds 3 reviews/hotel if YELP_API_KEY is set
+        hotels_raw = await enrich_hotels_with_yelp(hotels_raw, city)
+
         j.update(hotels_total=len(hotels_raw), phase="Saving hotels to database…")
 
         # ── Phase 2: batch-insert all hotel shells to get their IDs ──────────
@@ -306,6 +311,7 @@ async def _run_pipeline(job_id: str, req: CitySearchRequest):
                     url=hotel_data.get("url", ""),
                     phone=hotel_data.get("phone", ""),
                     price_range=hotel_data.get("price_range", ""),
+                    photo_url=hotel_data.get("photo_url", ""),
                     avg_rating=hotel_data.get("avg_rating"),
                     scraped_at=datetime.utcnow(),
                 )

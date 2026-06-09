@@ -13,6 +13,8 @@ interface BackendHotelRecommendation extends BackendHotel {
   why_it_fits?: string;
 }
 
+const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80";
+
 interface BackendHotel {
   id: number;
   name: string;
@@ -20,6 +22,7 @@ interface BackendHotel {
   address?: string;
   platform?: string;
   url?: string;
+  photo_url?: string;
   price_range?: string;
   avg_rating?: number;
   total_reviews: number;
@@ -53,6 +56,7 @@ export interface StreamHotel {
   name: string;
   address: string;
   price_range: string;
+  photo_url: string;
   avg_rating: number | null;
   total_reviews: number;
   scores: {
@@ -109,7 +113,7 @@ export function transformHotel(h: BackendHotel): Hotel {
     address: h.address || "",
     starRating: 4,
     pricePerNight: priceFromRange(h.price_range),
-    imageUrl: `https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80`,
+    imageUrl: h.photo_url || FALLBACK_IMAGE,
     bookingUrl: h.url || "https://booking.com",
     amenities: [],
     totalReviews: h.total_reviews,
@@ -149,7 +153,7 @@ export function transformStreamHotel(h: StreamHotel): Hotel {
     address: h.address || "",
     starRating: 4,
     pricePerNight: priceFromRange(h.price_range),
-    imageUrl: `https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80`,
+    imageUrl: h.photo_url || FALLBACK_IMAGE,
     bookingUrl: "https://booking.com",
     amenities: [],
     totalReviews: h.total_reviews,

@@ -173,8 +173,29 @@ DETAIL_FIELDS = (
     "priceLevel,"
     "websiteUri,"
     "nationalPhoneNumber,"
-    "reviews"          # up to 5 reviews included for free
+    "photos,"          # up to 10 photo references
+    "reviews"          # up to 5 reviews
 )
+
+
+async def _get_photo_uri(session: aiohttp.ClientSession, photo_name: str) -> str:
+    """
+    Resolve a Places photo resource name → publicly accessible CDN URL.
+    Uses skipHttpRedirect=true so we get the photoUri JSON instead of a redirect.
+    The returned lh3.googleusercontent.com URL requires no API key.
+    """
+    url = (
+        f"{PLACES_BASE}/{photo_name}/media"
+        f"?maxWidthPx=800&skipHttpRedirect=true&key={_api_key()}"
+    )
+    try:
+        async with session.get(url, timeout=aiohttp.ClientTimeout(total=8)) as resp:
+            if resp.status == 200:
+                data = await resp.json()
+                return data.get("photoUri", "")
+    except Exception:
+        pass
+    return ""
 
 
 async def _get_place_details(
@@ -222,8 +243,14 @@ async def _get_place_details(
             hotel_name = data.get("displayName", {}).get("text", name)
             price = _estimate_price_range(hotel_name, google_price)
 
+            # Fetch first photo CDN URL (no API key in the URL → safe for frontend)
+            photo_url = ""
+            photos = data.get("photos", [])
+            if photos:
+                photo_url = await _get_photo_uri(session, photos[0]["name"])
+
             result = {
-                "name": data.get("displayName", {}).get("text", name),
+                "name": hotel_name,
                 "address": data.get("formattedAddress", ""),
                 "url": data.get("websiteUri", ""),
                 "phone": data.get("nationalPhoneNumber", ""),
@@ -231,9 +258,11 @@ async def _get_place_details(
                 "platform": "google",
                 "price_per_night": None,
                 "price_range": price,
+                "photo_url": photo_url,
                 "reviews": reviews,
             }
-            print(f"  ✓ {result['name']}  |  rating={result['avg_rating']}  |  {len(reviews)} reviews")
+            photo_tag = "📷" if photo_url else "  "
+            print(f"  ✓ {result['name']}  |  rating={result['avg_rating']}  |  {len(reviews)} reviews  {photo_tag}")
             return result
 
     except Exception as e:

@@ -21,6 +21,8 @@ class HotelORM(Base):
     phone = Column(String)
     price_range = Column(String)
 
+    photo_url = Column(String)          # Google Places CDN photo (lh3.googleusercontent.com)
+
     avg_rating = Column(Float)
     total_reviews = Column(Integer, default=0)
 
@@ -84,6 +86,7 @@ class HotelOut(BaseModel):
     address: Optional[str] = None
     platform: Optional[str] = None
     url: Optional[str] = None
+    photo_url: Optional[str] = None
     price_range: Optional[str] = None
     avg_rating: Optional[float] = None
     total_reviews: int = 0

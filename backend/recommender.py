@@ -43,6 +43,7 @@ def _serialize_hotel(hotel) -> dict:
         "name": hotel.name,
         "address": hotel.address or "",
         "price_range": hotel.price_range or "unknown",
+        "photo_url": hotel.photo_url or "",
         "avg_rating": round(hotel.avg_rating, 1) if hotel.avg_rating else None,
         "total_reviews": hotel.total_reviews or 0,
         "scores": {
